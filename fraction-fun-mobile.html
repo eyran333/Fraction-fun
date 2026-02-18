@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#e8f4ff">
+<title>Fraction Fun! 🍕</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #e8f4ff;
+    --sun: #FFD93D;
+    --coral: #FF6B6B;
+    --mint: #6BCB77;
+    --purple: #845EC2;
+    --orange: #FF9A3C;
+    --blue: #4D96FF;
+    --pink: #FF6FD8;
+    --dark: #2d2d2d;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --nav-h: 72px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--sky);
+    min-height: 100vh;
+    min-height: 100dvh;
+    overscroll-behavior: none;
+  }
+
+  /* ── LAYOUT ── */
+  #app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-bottom: calc(var(--nav-h) + var(--safe-bottom));
+  }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    padding: 18px 16px 6px;
+    background: var(--sky);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .title {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(1.6rem, 8vw, 2.4rem);
+    color: var(--purple);
+    text-shadow: 3px 3px 0 #c8adff;
+    letter-spacing: 1px;
+  }
+
+  /* ── SCORE BAR ── */
+  .scorebar {
+    display: flex; justify-content: center; gap: 8px;
+    padding: 6px 12px; flex-wrap: wrap;
+  }
+  .score-pill {
+    background: white; border-radius: 50px; padding: 5px 14px;
+    font-size: .85rem; font-weight: 800;
+    box-shadow: 0 2px 8px #0001;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .score-pill .lbl { color: #bbb; font-size: .72rem; font-weight: 700; }
+
+  /* ── MAIN CARD ── */
+  .card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 4px 24px #0001;
+    margin: 8px 12px;
+    padding: 20px 16px 18px;
+    position: relative;
+    overflow: hidden;
+    flex: 1;
+  }
+  .card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+    background: linear-gradient(90deg, var(--coral), var(--orange), var(--sun), var(--mint), var(--blue), var(--purple));
+  }
+
+  /* Level badge */
+  .level-badge {
+    position: absolute; top: 12px; right: 14px;
+    background: var(--sun); color: var(--dark);
+    font-family: 'Fredoka One', cursive; font-size: .78rem;
+    padding: 3px 11px; border-radius: 50px;
+    box-shadow: 0 2px 6px #FFD93D44;
+  }
+
+  /* ── COMPARE SUB-LEVELS ── */
+  .cmp-level-bar {
+    display: none; justify-content: center; gap: 6px;
+    flex-wrap: wrap; padding: 4px 0 12px;
+    border-bottom: 2px dashed #f0e6ff; margin-bottom: 14px;
+  }
+  .cmp-level-bar.show { display: flex; }
+  .clvl-btn {
+    font-family: 'Fredoka One', cursive; font-size: .8rem;
+    padding: 8px 14px; border: 2.5px solid #eee;
+    border-radius: 50px; cursor: pointer; background: white;
+    color: #aaa; transition: all .15s;
+    min-height: 44px; /* touch target */
+  }
+  .clvl-btn.active { background: var(--pink); color: white; border-color: var(--pink); }
+
+  /* ── PIZZA VISUAL ── */
+  .visual-area {
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .pizza-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .pizza-label { font-size: .78rem; font-weight: 700; color: #999; }
+  canvas.pizza { border-radius: 50%; box-shadow: 0 3px 12px #0002; }
+  .op-symbol { font-family: 'Fredoka One', cursive; font-size: 2rem; color: var(--purple); align-self: center; }
+
+  /* ── QUESTION ROW ── */
+  .question-display { text-align: center; margin-bottom: 18px; }
+  .fraction-row { display: inline-flex; align-items: center; gap: 12px; font-family: 'Fredoka One', cursive; }
+  .frac { display: inline-flex; flex-direction: column; align-items: center; line-height: 1; }
+  .frac .num, .frac .den { font-size: clamp(2rem, 8vw, 2.6rem); color: var(--dark); }
+  .frac .bar { width: 100%; min-width: 28px; height: 3px; background: var(--dark); margin: 4px 0; border-radius: 2px; }
+  .op-text { font-family: 'Fredoka One', cursive; font-size: clamp(1.8rem, 7vw, 2.4rem); color: var(--purple); }
+  .equals  { font-size: clamp(1.8rem, 7vw, 2.4rem); color: #bbb; font-family: 'Fredoka One', cursive; }
+
+  /* ── ANSWER AREA ── */
+  .answer-area { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+
+  /* Fraction input */
+  .frac-inputs {
+    display: flex; flex-direction: column; align-items: center;
+    border: 3px solid #eee; border-radius: 16px; padding: 10px 16px;
+    transition: border-color .2s;
+  }
+  .frac-inputs:focus-within { border-color: var(--purple); }
+  .frac-inputs input {
+    font-family: 'Fredoka One', cursive; font-size: 2rem;
+    width: 90px; text-align: center; border: none; outline: none;
+    color: var(--dark); background: transparent;
+    /* show number pad on mobile */
+    inputmode: numeric;
+  }
+  .frac-bar-input { width: 60px; height: 3px; background: #ddd; border-radius: 2px; margin: 4px 0; }
+
+  .submit-btn {
+    font-family: 'Fredoka One', cursive; font-size: 1.15rem;
+    padding: 16px 44px; border: none; border-radius: 50px;
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    color: white; cursor: pointer; width: 100%; max-width: 280px;
+    box-shadow: 0 5px 18px #845EC233;
+    min-height: 56px; /* big touch target */
+    transition: transform .15s;
+    -webkit-appearance: none;
+  }
+  .submit-btn:active { transform: scale(.97); }
+  .submit-btn:disabled { opacity: .45; }
+
+  /* Compare pick cards — BIG touch targets */
+  .pick-cards { display: flex; gap: 16px; justify-content: center; width: 100%; }
+  .pick-card {
+    flex: 1; max-width: 140px;
+    background: white; border: 3px solid #eee; border-radius: 20px;
+    padding: 20px 12px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    box-shadow: 0 3px 12px #0001; font-family: 'Fredoka One', cursive;
+    min-height: 110px; /* touch target */
+    transition: transform .15s, border-color .15s;
+  }
+  .pick-card:active { transform: scale(.96); }
+  .pick-card.correct-card { border-color: var(--mint); background: #f0fff4; }
+  .pick-card.wrong-card   { border-color: var(--coral); background: #fff0f0; }
+  .pick-card .frac-display { font-size: clamp(1.5rem, 6vw, 2rem); color: var(--dark); line-height: 1; text-align: center; }
+
+  /* Compare symbol buttons */
+  .compare-btns { display: flex; gap: 14px; }
+  .cmp-btn {
+    font-family: 'Fredoka One', cursive; font-size: 1.9rem;
+    width: 72px; height: 72px; border-radius: 20px; border: none;
+    cursor: pointer; color: white;
+    box-shadow: 0 4px 12px #0002;
+    transition: transform .12s;
+    -webkit-appearance: none;
+  }
+  .cmp-btn:active { transform: scale(.93); }
+  .cmp-btn:disabled { opacity: .4; }
+  .cmp-btn.lt { background: var(--coral); }
+  .cmp-btn.eq { background: var(--orange); }
+  .cmp-btn.gt { background: var(--mint); }
+
+  /* Feedback */
+  .feedback {
+    min-height: 40px; text-align: center;
+    font-family: 'Fredoka One', cursive; font-size: 1.3rem;
+    margin-top: 2px;
+  }
+  .feedback.correct { color: var(--mint); }
+  .feedback.wrong   { color: var(--coral); }
+
+  /* Hint button */
+  .hint-btn {
+    font-family: 'Fredoka One', cursive; font-size: .9rem;
+    padding: 10px 22px; border: 2.5px dashed var(--orange);
+    border-radius: 50px; background: white; color: var(--orange);
+    cursor: pointer; min-height: 44px;
+    display: flex; align-items: center; gap: 5px;
+    -webkit-appearance: none;
+  }
+  .hint-btn.peeked { background: #fff3e0; border-style: solid; }
+
+  /* Next button */
+  .next-btn {
+    font-family: 'Fredoka One', cursive; font-size: 1.05rem;
+    padding: 14px 36px; border: none; border-radius: 50px;
+    background: var(--sun); color: var(--dark);
+    cursor: pointer; box-shadow: 0 4px 14px #FFD93D55;
+    min-height: 52px; width: 100%; max-width: 280px;
+    display: none; -webkit-appearance: none;
+  }
+  .next-btn.show { display: inline-block; }
+  .next-btn:active { transform: scale(.97); }
+
+  /* Tip box */
+  .tip-box {
+    background: linear-gradient(135deg, #fff8f0, #fdf4ff);
+    border-left: 4px solid var(--orange); border-radius: 12px;
+    padding: 12px 14px; font-size: .88rem; color: #555; font-weight: 700;
+    margin-top: 8px; display: none; white-space: pre-line; line-height: 1.65;
+  }
+  .tip-box.show { display: block; }
+
+  /* Streak */
+  .streak-bar { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; padding: 8px 0 0; }
+  .star { font-size: 1.1rem; animation: pop .3s ease; }
+  @keyframes pop { 0%{transform:scale(0)} 70%{transform:scale(1.3)} 100%{transform:scale(1)} }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: calc(var(--nav-h) + var(--safe-bottom));
+    background: white;
+    box-shadow: 0 -2px 20px #0002;
+    display: flex; align-items: flex-start; justify-content: space-around;
+    padding-top: 8px;
+    padding-bottom: var(--safe-bottom);
+    z-index: 100;
+  }
+  .nav-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    flex: 1; padding: 6px 4px;
+    border: none; background: transparent; cursor: pointer;
+    min-height: 56px;
+    -webkit-appearance: none;
+  }
+  .nav-icon {
+    font-size: 1.5rem; line-height: 1;
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 14px; transition: all .15s;
+  }
+  .nav-label {
+    font-family: 'Fredoka One', cursive; font-size: .62rem;
+    color: #bbb; transition: color .15s; margin-top: 2px;
+  }
+  .nav-btn.active .nav-icon { transform: scale(1.08); }
+  .nav-btn.active .nav-label { color: white; }
+
+  .nav-btn[data-mode="add"]  .nav-icon { background: var(--mint); }
+  .nav-btn[data-mode="sub"]  .nav-icon { background: var(--coral); }
+  .nav-btn[data-mode="mul"]  .nav-icon { background: var(--orange); }
+  .nav-btn[data-mode="div"]  .nav-icon { background: var(--blue); }
+  .nav-btn[data-mode="cmp"]  .nav-icon { background: var(--pink); }
+
+  .nav-btn:not(.active) .nav-icon { background: #f0f0f0; font-size: 1.2rem; }
+  .nav-btn.active[data-mode="add"]   .nav-label { color: var(--mint); }
+  .nav-btn.active[data-mode="sub"]   .nav-label { color: var(--coral); }
+  .nav-btn.active[data-mode="mul"]   .nav-label { color: var(--orange); }
+  .nav-btn.active[data-mode="div"]   .nav-label { color: var(--blue); }
+  .nav-btn.active[data-mode="cmp"]   .nav-label { color: var(--pink); }
+
+  /* ── CONFETTI ── */
+  .celebrate { position: fixed; inset: 0; pointer-events: none; z-index: 200; overflow: hidden; }
+  .cp { position: absolute; width: 10px; height: 10px; top: -20px; animation: fall linear forwards; border-radius: 2px; }
+  @keyframes fall { to { transform: translateY(105vh) rotate(720deg); opacity: 0; } }
+
+  /* hint-text small label */
+  .hint-text { font-size: .8rem; color: #ccc; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="celebrate" id="celebrate"></div>
+
+<div id="app">
+  <header>
+    <div class="title">🍕 Fraction Fun!</div>
+  </header>
+
+  <div class="scorebar">
+    <div class="score-pill"><span class="lbl">⭐</span><span id="scoreNum">0</span></div>
+    <div class="score-pill"><span class="lbl">🔥 Streak</span><span id="streakNum">0</span></div>
+    <div class="score-pill"><span class="lbl">✅ Total</span><span id="totalNum">0</span></div>
+  </div>
+
+  <div class="card">
+    <div class="level-badge" id="levelBadge">⭐ Level 1</div>
+
+    <div class="cmp-level-bar" id="cmpLevelBar">
+      <button class="clvl-btn active" onclick="setCmpLevel(1)">🟢 Same Bottom</button>
+      <button class="clvl-btn"        onclick="setCmpLevel(2)">🟡 Different</button>
+      <button class="clvl-btn"        onclick="setCmpLevel(3)">🔴 Tricky!</button>
+    </div>
+
+    <div class="visual-area" id="visualArea"></div>
+
+    <div class="question-display">
+      <div class="fraction-row" id="fractionRow"></div>
+    </div>
+
+    <div class="answer-area" id="answerArea"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:10px;">
+      <button class="hint-btn" id="hintBtn" onclick="toggleHint()">💡 Show Hint</button>
+      <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next Question →</button>
+    </div>
+
+    <div class="tip-box" id="tipBox"></div>
+    <div class="streak-bar" id="streakBar"></div>
+  </div>
+</div>
+
+<!-- Bottom navigation — thumb-friendly -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-mode="add" onclick="setMode('add')">
+    <div class="nav-icon">➕</div>
+    <div class="nav-label">Add</div>
+  </button>
+  <button class="nav-btn" data-mode="sub" onclick="setMode('sub')">
+    <div class="nav-icon">➖</div>
+    <div class="nav-label">Subtract</div>
+  </button>
+  <button class="nav-btn" data-mode="mul" onclick="setMode('mul')">
+    <div class="nav-icon">✖️</div>
+    <div class="nav-label">Multiply</div>
+  </button>
+  <button class="nav-btn" data-mode="div" onclick="setMode('div')">
+    <div class="nav-icon">➗</div>
+    <div class="nav-label">Divide</div>
+  </button>
+  <button class="nav-btn" data-mode="cmp" onclick="setMode('cmp')">
+    <div class="nav-icon">⚖️</div>
+    <div class="nav-label">Compare</div>
+  </button>
+</nav>
+
+<script>
+  let mode='add', score=0, streak=0, total=0, currentQ=null, level=1, cmpLevel=1, hintShown=false;
+
+  const gcd=(a,b)=>b===0?a:gcd(b,a%b);
+  const lcm=(a,b)=>a*b/gcd(a,b);
+  const simplify=(n,d)=>{if(!d)return{n:0,d:1};const g=gcd(Math.abs(n),Math.abs(d));return{n:n/g,d:d/g};};
+  const ri=(mn,mx)=>Math.floor(Math.random()*(mx-mn+1))+mn;
+  const pick=p=>p[ri(0,p.length-1)];
+
+  function pickDen(){
+    return pick([[2,3,4],[2,3,4,5,6],[2,3,4,5,6,8,10]][level-1]);
+  }
+  const makeFrac=()=>{const d=pickDen();return{n:ri(1,d-1),d};};
+
+  function setMode(m){
+    mode=m;
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
+    document.getElementById('cmpLevelBar').classList.toggle('show',m==='cmp');
+    nextQuestion();
+  }
+
+  function setCmpLevel(l){
+    cmpLevel=l;
+    document.querySelectorAll('.clvl-btn').forEach((b,i)=>b.classList.toggle('active',i===l-1));
+    nextQuestion();
+  }
+
+  function generateQuestion(){
+    let a=makeFrac(),b=makeFrac(),answer={},op='';
+    if(mode==='sub'&&level===1) while(a.n/a.d<b.n/b.d) b=makeFrac();
+
+    if(mode==='add'){
+      op='+';const L=lcm(a.d,b.d);answer=simplify(a.n*(L/a.d)+b.n*(L/b.d),L);
+    }else if(mode==='sub'){
+      op='−';const L=lcm(a.d,b.d);answer=simplify(Math.abs(a.n*(L/a.d)-b.n*(L/b.d)),L);
+    }else if(mode==='mul'){
+      op='×';answer=simplify(a.n*b.n,a.d*b.d);
+    }else if(mode==='div'){
+      op='÷';answer=simplify(a.n*b.d,a.d*b.n);
+    }else{
+      op='?';
+      if(cmpLevel===1){
+        const d=pick([2,3,4,6,8]);
+        a={n:ri(1,d-1),d};b={n:ri(1,d-1),d};
+        while(b.n===a.n)b={n:ri(1,d-1),d};
+      }else if(cmpLevel===2){
+        const pool=[2,3,4,5,6];
+        const da=pick(pool);let db=pick(pool);while(db===da)db=pick(pool);
+        a={n:ri(1,da-1),d:da};b={n:ri(1,db-1),d:db};
+        let t=0;while(Math.abs(a.n/a.d-b.n/b.d)<0.05&&t++<50)b={n:ri(1,db-1),d:db};
+      }else{
+        const pool=[4,5,6,8,10,12];
+        const da=pick(pool);let db=pick(pool);while(db===da)db=pick(pool);
+        a={n:ri(1,da-1),d:da};b={n:ri(1,db-1),d:db};
+        let t=0;while((Math.abs(a.n/a.d-b.n/b.d)>0.3||Math.abs(a.n/a.d-b.n/b.d)<0.01)&&t++<60)b={n:ri(1,db-1),d:db};
+      }
+      const av=a.n/a.d,bv=b.n/b.d;
+      answer.cmp=av<bv?'<':av>bv?'>':'=';
+      answer.bigger=av>bv?'a':bv>av?'b':'eq';
+    }
+    return {a,b,op,answer};
+  }
+
+  function renderFractions(q){
+    const row=document.getElementById('fractionRow');
+    if(mode==='cmp'){
+      row.innerHTML=`
+        <div class="frac"><span class="num">${q.a.n}</span><div class="bar"></div><span class="den">${q.a.d}</span></div>
+        <span id="answerPlaceholder" class="op-text" style="color:#ddd;min-width:2rem;text-align:center">?</span>
+        <div class="frac"><span class="num">${q.b.n}</span><div class="bar"></div><span class="den">${q.b.d}</span></div>`;
+    }else{
+      row.innerHTML=`
+        <div class="frac"><span class="num">${q.a.n}</span><div class="bar"></div><span class="den">${q.a.d}</span></div>
+        <span class="op-text">${q.op}</span>
+        <div class="frac"><span class="num">${q.b.n}</span><div class="bar"></div><span class="den">${q.b.d}</span></div>
+        <span class="equals">=</span>
+        <span id="answerPlaceholder" style="font-family:'Fredoka One',cursive;font-size:clamp(2rem,8vw,2.6rem);color:#ddd">?</span>`;
+    }
+  }
+
+  function renderVisual(q){
+    const area=document.getElementById('visualArea');
+    area.innerHTML='';
+    if(mode==='cmp') return;
+    if(!['add','sub'].includes(mode)){
+      area.innerHTML='<p style="color:#ddd;font-size:.75rem;font-weight:700">🍕 Pizza for add & subtract!</p>';
+      return;
+    }
+    const sz=Math.min(90, Math.floor((window.innerWidth-80)/2));
+    [q.a,q.b].forEach((f,i)=>{
+      const wrap=document.createElement('div');wrap.className='pizza-wrap';
+      const lbl=document.createElement('div');lbl.className='pizza-label';lbl.textContent=`${f.n}/${f.d}`;
+      const cvs=document.createElement('canvas');cvs.className='pizza';cvs.width=cvs.height=sz;
+      wrap.appendChild(cvs);wrap.appendChild(lbl);area.appendChild(wrap);
+      drawPizza(cvs,f.n,f.d,sz);
+      if(i===0){const op=document.createElement('div');op.className='op-symbol';op.textContent=q.op;area.appendChild(op);}
+    });
+  }
+
+  function drawPizza(canvas,n,d,sz){
+    const ctx=canvas.getContext('2d'),cx=sz/2,cy=sz/2,r=sz/2-3;
+    const cols=['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#FF9A3C','#FF6FD8','#845EC2','#A8E6CF'];
+    ctx.clearRect(0,0,sz,sz);
+    for(let i=0;i<d;i++){
+      const s=-Math.PI/2+i*(2*Math.PI/d),e=s+(2*Math.PI/d);
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,s,e);ctx.closePath();
+      ctx.fillStyle=i<n?cols[i%cols.length]:'#f0f0f0';ctx.fill();
+      ctx.strokeStyle='white';ctx.lineWidth=2;ctx.stroke();
+    }
+    ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.strokeStyle='#ddd';ctx.lineWidth=2;ctx.stroke();
+  }
+
+  function renderAnswerArea(q){
+    const area=document.getElementById('answerArea');
+    area.innerHTML='';
+    if(mode==='cmp'){
+      const lvlDesc=cmpLevel===1?'Same bottom — compare the tops!':cmpLevel===2?'Different bottoms — think carefully!':'Tricky — these are close!';
+      area.innerHTML=`
+        <div style="font-size:.78rem;font-weight:700;color:#bbb">${lvlDesc}</div>
+        <div style="font-size:.95rem;font-weight:800;color:#555">🏆 Which fraction is BIGGER?</div>
+        <div class="pick-cards">
+          <div class="pick-card" id="pickA" onclick="checkPickBigger('a')">
+            <div class="frac-display">
+              <div style="display:inline-flex;flex-direction:column;align-items:center">
+                <span>${q.a.n}</span>
+                <div style="width:36px;height:3px;background:#333;margin:4px 0;border-radius:2px"></div>
+                <span>${q.a.d}</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;font-family:'Fredoka One',cursive;font-size:1.3rem;color:#ddd">vs</div>
+          <div class="pick-card" id="pickB" onclick="checkPickBigger('b')">
+            <div class="frac-display">
+              <div style="display:inline-flex;flex-direction:column;align-items:center">
+                <span>${q.b.n}</span>
+                <div style="width:36px;height:3px;background:#333;margin:4px 0;border-radius:2px"></div>
+                <span>${q.b.d}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:.78rem;font-weight:700;color:#ccc;margin-top:2px">or pick the symbol:</div>
+        <div class="compare-btns">
+          <button class="cmp-btn lt" onclick="checkCompare('<')">﹤</button>
+          <button class="cmp-btn eq" onclick="checkCompare('=')">=</button>
+          <button class="cmp-btn gt" onclick="checkCompare('>')">﹥</button>
+        </div>`;
+    }else{
+      area.innerHTML=`
+        <div class="hint-text">Type numerator and denominator</div>
+        <div class="frac-inputs">
+          <input type="number" inputmode="numeric" pattern="[0-9]*" id="numInput" placeholder="top" min="0" max="99">
+          <div class="frac-bar-input"></div>
+          <input type="number" inputmode="numeric" pattern="[0-9]*" id="denInput" placeholder="bottom" min="1" max="99">
+        </div>
+        <div style="font-size:.72rem;color:#ccc;font-weight:700">Whole number? Put 1 on the bottom</div>
+        <button class="submit-btn" onclick="checkAnswer()">Check it! ✓</button>`;
+      setTimeout(()=>{const n=document.getElementById('numInput');if(n)n.focus();},80);
+      document.addEventListener('keydown',handleEnter);
+    }
+  }
+
+  function handleEnter(e){if(e.key==='Enter')checkAnswer();}
+
+  function checkAnswer(){
+    document.removeEventListener('keydown',handleEnter);
+    const ne=document.getElementById('numInput'),de=document.getElementById('denInput');
+    if(!ne||!de)return;
+    const n=parseInt(ne.value),d=parseInt(de.value)||1;
+    if(isNaN(n)){showFeedback('Type a number!','');return;}
+    const given=simplify(n,d),correct=simplify(currentQ.answer.n,currentQ.answer.d);
+    if(given.n===correct.n&&given.d===correct.d)onCorrect();
+    else onWrong(`${correct.n}/${correct.d}`);
+  }
+
+  function checkPickBigger(picked){
+    const correct=currentQ.answer.bigger;
+    const cA=document.getElementById('pickA'),cB=document.getElementById('pickB');
+    document.querySelectorAll('.pick-card').forEach(c=>c.onclick=null);
+    document.querySelectorAll('.cmp-btn').forEach(b=>b.disabled=true);
+    if(picked===correct){
+      if(picked==='a'&&cA)cA.classList.add('correct-card');
+      if(picked==='b'&&cB)cB.classList.add('correct-card');
+      onCorrect();
+    }else{
+      if(picked==='a'&&cA)cA.classList.add('wrong-card');
+      if(picked==='b'&&cB)cB.classList.add('wrong-card');
+      if(correct==='a'&&cA)cA.classList.add('correct-card');
+      if(correct==='b'&&cB)cB.classList.add('correct-card');
+      onWrong(correct==='a'?`${currentQ.a.n}/${currentQ.a.d}`:correct==='b'?`${currentQ.b.n}/${currentQ.b.d}`:'Equal!');
+    }
+  }
+
+  function checkCompare(sym){
+    document.querySelectorAll('.pick-card').forEach(c=>c.onclick=null);
+    document.querySelectorAll('.cmp-btn').forEach(b=>b.disabled=true);
+    const bigger=currentQ.answer.bigger;
+    const cA=document.getElementById('pickA'),cB=document.getElementById('pickB');
+    if(sym===currentQ.answer.cmp){
+      if(bigger==='a'&&cA)cA.classList.add('correct-card');
+      if(bigger==='b'&&cB)cB.classList.add('correct-card');
+      onCorrect();
+    }else onWrong(currentQ.answer.cmp);
+  }
+
+  function onCorrect(){
+    score++;streak++;total++;updateStats();
+    showFeedback(pick(['Amazing! 🎉','Super! ⭐','You got it! 🚀','Fantastic! 🌟','Brilliant! 🏆','Correct! 🎊','Awesome! 🥳','Right on! 💥']),'correct');
+    addStar();updatePlaceholder(currentQ.answer);showNextBtn();
+    if(streak%5===0)celebrate();
+    checkLevelUp();showTip(null);
+  }
+
+  function onWrong(s){
+    streak=0;total++;updateStats();
+    showFeedback(`Not quite! Answer: ${s} 💡`,'wrong');
+    showNextBtn();showTip(currentQ);
+  }
+
+  function updatePlaceholder(ans){
+    const ph=document.getElementById('answerPlaceholder');if(!ph)return;
+    if(mode==='cmp'){
+      ph.style.color='var(--mint)';
+      ph.textContent=ans.cmp==='<'?'﹤':ans.cmp==='>'?'﹥':'=';
+    }else if(ans.d===1){
+      ph.innerHTML=`<span style="color:var(--mint)">${ans.n}</span>`;
+    }else{
+      ph.innerHTML=`<div class="frac" style="color:var(--mint)"><span class="num">${ans.n}</span><div class="bar" style="background:var(--mint)"></div><span class="den">${ans.d}</span></div>`;
+    }
+  }
+
+  function showFeedback(msg,cls){
+    const fb=document.getElementById('feedback');fb.textContent=msg;fb.className='feedback '+(cls||'');
+  }
+
+  function showNextBtn(){
+    document.getElementById('nextBtn').classList.add('show');
+    const ni=document.getElementById('numInput'),di=document.getElementById('denInput');
+    if(ni)ni.disabled=true;if(di)di.disabled=true;
+    const sb=document.querySelector('.submit-btn');if(sb)sb.disabled=true;
+    document.querySelectorAll('.cmp-btn').forEach(b=>b.disabled=true);
+  }
+
+  function addStar(){
+    const bar=document.getElementById('streakBar');
+    const s=document.createElement('span');s.className='star';s.textContent='⭐';
+    bar.appendChild(s);
+    if(bar.children.length>8)bar.removeChild(bar.firstChild);
+  }
+
+  function updateStats(){
+    document.getElementById('scoreNum').textContent=score;
+    document.getElementById('streakNum').textContent=streak;
+    document.getElementById('totalNum').textContent=total;
+  }
+
+  function checkLevelUp(){
+    const nl=Math.min(3,Math.floor(score/10)+1);
+    if(nl!==level){level=nl;document.getElementById('levelBadge').textContent='⭐'.repeat(level)+' Level '+level;}
+  }
+
+  function buildTipText(q){
+    if(mode==='add'||mode==='sub'){
+      const L=lcm(q.a.d,q.b.d),an=q.a.n*(L/q.a.d),bn=q.b.n*(L/q.b.d);
+      if(q.a.d===q.b.d)return`💡 Same bottom (${q.a.d})!\nJust ${mode==='add'?'add':'subtract'} the tops:\n${q.a.n} ${mode==='add'?'+':'−'} ${q.b.n} = ${mode==='add'?q.a.n+q.b.n:q.a.n-q.b.n}`;
+      return`💡 Different bottoms → find LCD!\nLCD of ${q.a.d} & ${q.b.d} = ${L}\n→ ${q.a.n}/${q.a.d} = ${an}/${L}\n→ ${q.b.n}/${q.b.d} = ${bn}/${L}\nNow ${mode==='add'?'add':'subtract'}: ${an} ${mode==='add'?'+':'−'} ${bn} = ${mode==='add'?an+bn:an-bn}`;
+    }else if(mode==='mul'){
+      return`💡 Multiply tops AND bottoms:\n→ Top: ${q.a.n} × ${q.b.n} = ${q.a.n*q.b.n}\n→ Bottom: ${q.a.d} × ${q.b.d} = ${q.a.d*q.b.d}\nThen simplify!`;
+    }else if(mode==='div'){
+      return`💡 Keep, Change, Flip!\n→ Keep: ${q.a.n}/${q.a.d}\n→ Change ÷ to ×\n→ Flip: ${q.b.d}/${q.b.n}\nMultiply: (${q.a.n}×${q.b.d})÷(${q.a.d}×${q.b.n})`;
+    }
+    return'';
+  }
+
+  function toggleHint(){
+    const box=document.getElementById('tipBox'),btn=document.getElementById('hintBtn');
+    hintShown=!hintShown;
+    if(hintShown){box.textContent=buildTipText(currentQ);box.classList.add('show');btn.textContent='🙈 Hide Hint';btn.classList.add('peeked');}
+    else{box.classList.remove('show');btn.textContent='💡 Show Hint';btn.classList.remove('peeked');}
+  }
+
+  function showTip(q){
+    const box=document.getElementById('tipBox'),btn=document.getElementById('hintBtn');
+    if(!q){box.classList.remove('show');hintShown=false;btn.textContent='💡 Show Hint';btn.classList.remove('peeked');return;}
+    if(mode==='cmp')return;
+    box.textContent=buildTipText(q);box.classList.add('show');
+    hintShown=true;btn.textContent='🙈 Hide Hint';btn.classList.add('peeked');
+  }
+
+  function nextQuestion(){
+    document.getElementById('nextBtn').classList.remove('show');
+    document.getElementById('feedback').textContent='';
+    document.getElementById('feedback').className='feedback';
+    showTip(null);hintShown=false;
+    document.removeEventListener('keydown',handleEnter);
+    currentQ=generateQuestion();
+    renderVisual(currentQ);renderFractions(currentQ);renderAnswerArea(currentQ);
+    document.getElementById('hintBtn').style.display=mode==='cmp'?'none':'flex';
+  }
+
+  function celebrate(){
+    const c=document.getElementById('celebrate');c.innerHTML='';
+    const cols=['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#FF9A3C','#FF6FD8','#845EC2'];
+    for(let i=0;i<55;i++){
+      const p=document.createElement('div');p.className='cp';
+      p.style.left=ri(0,100)+'vw';
+      p.style.background=cols[ri(0,cols.length-1)];
+      p.style.animationDuration=(ri(14,32)/10)+'s';
+      p.style.animationDelay=(ri(0,12)/10)+'s';
+      p.style.transform=`rotate(${ri(0,360)}deg)`;
+      if(Math.random()>.5){p.style.borderRadius='50%';p.style.width=p.style.height=ri(8,14)+'px';}
+      c.appendChild(p);
+    }
+    setTimeout(()=>c.innerHTML='',4000);
+  }
+
+  nextQuestion();
+</script>
+</body>
+</html>
